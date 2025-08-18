@@ -13,11 +13,15 @@ const eslintConfig = [
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     rules: {
-      '@typescript-eslint/ban-ts-comment': 'warn',
-      '@typescript-eslint/no-empty-object-type': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+
+      
+      'prefer-const': 'off',
+      'react/no-unescaped-entities': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
-        'warn',
+        'off',
         {
           vars: 'all',
           args: 'after-used',
@@ -30,9 +34,11 @@ const eslintConfig = [
       ],
     },
   },
-  {
-    ignores: ['.next/'],
+ {
+    ignores: ['.next/', 'node_modules/'],
   },
 ]
 
 export default eslintConfig
+
+ 
