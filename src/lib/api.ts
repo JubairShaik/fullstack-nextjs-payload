@@ -2,7 +2,8 @@
 
 import { headers } from 'next/headers'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+ 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL as string;
 
 // Generic API fetch wrapper
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -18,7 +19,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     },
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, config)
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, config)
 
   if (!response.ok) {
     throw new Error(`API Error: ${response.status} ${response.statusText}`)
@@ -172,7 +173,7 @@ export const mediaApi = {
     formData.append('file', file)
     formData.append('alt', alt)
 
-    const response = await fetch(`${API_BASE}/media`, {
+    const response = await fetch(`${API_BASE_URL}/media`, {
       method: 'POST',
       body: formData,
     })
