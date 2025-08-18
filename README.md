@@ -1,4 +1,4 @@
-# TechBlog Pro - Modern Full-Stack Blog Application
+<img width="1707" height="1027" alt="adminw" src="https://github.com/user-attachments/assets/874313ab-aaab-4512-b7f1-c21d82fd69cd" /># TechBlog Pro - Modern Full-Stack Blog Application
 
 A cutting-edge blog application built with Next.js 15, Payload CMS 3.0, and MongoDB. Features modern UI design, server-side rendering, and advanced content management capabilities.
 
@@ -13,12 +13,37 @@ A cutting-edge blog application built with Next.js 15, Payload CMS 3.0, and Mong
 - **Authentication**: Built-in user authentication
 - **Type Safety**: Full TypeScript support with auto-generated types
 
+
+
+<img width="1707" height="1027" alt="blog" src="https://github.com/user-attachments/assets/6e640103-ddfe-4783-ac29-c1670dcebe38" />
+<img width="1707" height="1027" alt="2" src="https://github.com/user-attachments/assets/edd6da9a-44ff-46c1-bd77-faafd5d96b94" />
+
+
+
+<img width="1707" height="1027" alt="-3" src="https://github.com/user-attachments/assets/fc7cdbba-082f-452d-bb0f-f4ff00078c73" />
+
+<img width="1707" height="1027" alt="database" src="https://github.com/user-attachments/assets/0c3dee16-078f-4446-b851-44c6e1f48b1d" />
+
+
+
+## ADMIN
+<img width="1707" height="1027" alt="admin" src="https://github.com/user-attachments/assets/fe1faa10-9191-4e4c-ba1c-8bffb76dc353" />
+
+
+<img width="1707" height="1027" alt="java-2" src="https://github.com/user-attachments/assets/5195f17c-4a6c-44a2-a4bd-ef45383f32e0" />
+ 
+<img width="1707" height="1027" alt="adminw" src="https://github.com/user-attachments/assets/0e0b8feb-ed97-4dfb-bf1e-f9d486ba0e96" />
+
+
+
+
 ## 📦 Project Structure
 
 ```
 ├── src/
 │   ├── app/
 │   │   ├── (frontend)/          # Public blog pages
+|   |   |   |-(BlogDetails)      # Fetch blog by ID
 │   │   │   ├── page.tsx         # Homepage
 │   │   │   └── layout.tsx       # Frontend layout
 │   │   └── (payload)/           # CMS admin pages
@@ -64,56 +89,6 @@ PAYLOAD_SECRET="SECRET_KEY"
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
 ```
 
-### 3. Add Collection Files
-
-Create the following files in your `src/collections/` directory:
-
-#### `src/collections/Posts.ts`
-```typescript
-// Copy the Posts collection code from the artifacts above
-```
-
-#### `src/collections/Categories.ts`
-```typescript
-// Copy the Categories collection code from the artifacts above
-```
-
-#### `src/collections/Tags.ts`
-```typescript
-// Copy the Tags collection code from the artifacts above
-```
-
-### 4. Update Payload Configuration
-
-Replace your `src/payload.config.ts`:
-
-```typescript
-// Copy the updated payload config from the artifacts above
-```
-
-### 5. Create API Utilities
-
-Create `src/lib/api.ts`:
-
-```typescript
-// Copy the API utilities from the artifacts above
-```
-
-### 6. Update Homepage
-
-Replace your `src/app/(frontend)/page.tsx`:
-
-```typescript
-// Copy the updated homepage code from the artifacts above
-```
-
-### 7. Create Client Component
-
-Create `src/components/BlogInteractions.tsx`:
-
-```typescript
-// Copy the BlogInteractions component from the artifacts above
-```
 
 ## 🚦 Running the Application
 
@@ -187,24 +162,6 @@ npm run generate:types
 - **Type Safety**: Full TypeScript support
 - **Modern Forms**: Server Actions for form handling
 
-### API Structure
-
-```typescript
-// Server Components for data fetching
-const posts = await getBlogPosts(searchParams)
-
-// Server Actions for mutations
-async function createPost(formData: FormData) {
-  'use server'
-  // Handle form submission
-}
-
-// Client Components only for interactivity
-'use client'
-function SearchInput() {
-  // Handle search interactions
-}
-```
 
 ## 🎨 Customization
 
