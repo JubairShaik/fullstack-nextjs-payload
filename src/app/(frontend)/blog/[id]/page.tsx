@@ -1,24 +1,25 @@
-import { notFound } from 'next/navigation'
+// @ts-nocheck
+
+
+import { headers as getHeaders } from 'next/headers'
+import Image from 'next/image'
 import Link from 'next/link'
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  ArrowLeft, 
-  Share2, 
-  BookmarkPlus, 
-  Heart,
-  MessageCircle,
-  ChevronRight,
-  Tag
-} from 'lucide-react'
-import { getBlogPost } from '@/lib/blog-actions'
+import { notFound } from 'next/navigation'
+import { getPayload } from 'payload'
+import React from 'react'
+import { Calendar, User, Clock, ArrowLeft, Tag as TagIcon, Share2, Sparkles } from 'lucide-react'
+
+import config from '@/payload.config'
+import { getBlogPost, getRecentPosts } from '@/lib/blog-actions'
 
 interface BlogPostPageProps {
   params: {
-    id: string   
+    id: string
   }
 }
+
+
+
 
 const LexicalRenderer = ({ content }) => {
   const renderNode = (node) => {
@@ -138,162 +139,262 @@ const LexicalRenderer = ({ content }) => {
   );
 };
 
- 
+
+
+
+
+
+
+
+
+
 
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await getBlogPost(params.id)  // Use params.id
+  const headers = await getHeaders()
+  const payloadConfig = await config
+  const payload = await getPayload({ config: payloadConfig })
+  const { user } = await payload.auth({ headers })
   
- 
+  // Fetch the blog post using Local API
+  const post = await getBlogPost(params.id)
+  const recentPosts = await getRecentPosts(3)
+
+  if (!post) {
+    notFound()
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Navigation Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-blue-100 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link 
-              href="/"
-              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Home
+      {/* Header */}
+      <header className="relative overflow-hidden bg-white/80 backdrop-blur-md border-b border-blue-100">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-indigo-600/5"></div>
+        <div className="relative max-w-7xl mx-auto px-4 py-6">
+          <nav className="flex items-center justify-between">
+            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold">
+              <Sparkles className="w-8 h-8 text-blue-600" />
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                TechBlog Pro
+              </span>
             </Link>
             
             <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-                <Share2 className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
-                <Heart className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all">
-                <BookmarkPlus className="w-5 h-5" />
-              </button>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Blog
+              </Link>
+              
+              {user && (
+                <Link
+                  href="/admin"
+                  target="_blank"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg transition-all text-sm"
+                >
+                  Dashboard
+                </Link>
+              )}
             </div>
-          </div>
+          </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="relative z-10 max-w-4xl mx-auto px-4 py-5">
-          {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-sm text-gray-600 mb-8">
-            <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
-            <ChevronRight className="w-4 h-4" />
+      <main className="max-w-4xl mx-auto px-4 py-12">
+        <article className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-200 shadow-xl">
+          {/* Featured Image */}
+          {post.featuredImage && (
+            <div className="relative h-96 overflow-hidden">
+              <Image
+                src={post.featuredImage.url}
+                alt={post.featuredImage.alt || post.title}
+                fill
+                className="object-contain p-4"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+          )}
+
+          {/* Article Content */}
+          <div className="p-8 lg:p-12">
+            {/* Article Meta */}
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              {post.category && (
+                <span
+                  className="px-4 py-2 text-sm font-semibold rounded-full text-white"
+                  style={{ backgroundColor: post.category.color }}
+                >
+                  {post.category.name}
+                </span>
+              )}
+              
+              <div className="flex items-center text-sm text-gray-500 gap-4">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {new Date(post.publishedDate || post.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {post.readingTime || 5} min read
+                </span>
+            
+              </div>
+            </div>
+
        
-            <span className="text-gray-900 font-medium">{post.title}</span>
-          </nav>
+            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6 leading-tight">
+              {post.title}
+            </h1>
 
-          {/* Title */}
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-            {post.title}
-          </h1>
-
-          {/* Excerpt */}
-          {post.excerpt && (
-            <p className="text-xl text-gray-700 mb-8 leading-relaxed max-w-3xl">
+       
+            <p className="text-xl text-gray-600 leading-relaxed mb-8 border-l-4 border-blue-500 pl-6 italic">
               {post.excerpt}
             </p>
-          )}
 
-          {/* Meta Info */}
-          <div className="flex flex-wrap items-center gap-6 mb-8">
-            
-            <div className="flex items-center gap-2 text-gray-600">
-              <Calendar className="w-5 h-5" />
-              <span>{new Date(post.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Clock className="w-5 h-5" />
-              <span>5 min read</span>
+         
+
+      
+        
+
+            <LexicalRenderer content={post.content} />
+
+            {/* Tags */}
+            {post.tags && post.tags.length > 0 && (
+              <div className="mt-12 pt-8 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <TagIcon className="w-5 h-5" />
+                  Tags
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {post.tags.map((tag, index) => (
+                    <Link
+                      key={index}
+                      href={`/?tag=${tag.slug}`}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      #{tag.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Share Section */}
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Share2 className="w-5 h-5" />
+                  <span className="font-medium">Share this article</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                    Twitter
+                  </button>
+                  <button className="px-4 py-2 bg-blue-800 text-white rounded-lg text-sm font-medium hover:bg-blue-900 transition-colors">
+                    LinkedIn
+                  </button>
+                  <button className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                    Copy Link
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+        </article>
 
-          {/* Tags */}
-          {post.tags && post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8">
-              {post.tags.map((tag: any, index: number) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full text-sm text-gray-700"
+        {/* Related Posts */}
+        {recentPosts.length > 0 && (
+          <section className="mt-16 ">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Recent Articles</h2>
+            <div className="grid md:grid-cols-2  w-full gap-3">
+
+
+              {recentPosts.filter(recentPost => recentPost.id !== post.id).slice(0, 3).map((recentPost) => (
+                <article
+                  key={recentPost.id}
+                  className="bg-whi  backdrop-blur-sm  rounded-xl overflow-hidden border border-gray-200 hover:border-blue-300 
+                  transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                 >
-                  <Tag className="w-3 h-3" />
-                  {typeof tag === 'string' ? tag : tag.name || tag.tag}
-                </span>
+                  {recentPost.featuredImage && (
+                    <div className="relative h-48 overflow-hidden">
+                      <Image
+                        src={recentPost.featuredImage.url}
+                        alt={recentPost.featuredImage.alt || recentPost.title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="p-6">
+                    {recentPost.category && (
+                      <span
+                        className="inline-block px-2 py-1 text-xs font-semibold rounded-full text-white mb-3"
+                        style={{ backgroundColor: recentPost.category.color }}
+                      >
+                        {recentPost.category.name}
+                      </span>
+                    )}
+                    
+                    <Link href={`/blog/${recentPost.id}`}>
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2">
+                        {recentPost.title}
+                      </h3>
+                    </Link>
+                    
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                      {recentPost.excerpt}
+                    </p>
+                    
+                    <div className="flex items-center text-xs text-gray-500 gap-3">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(recentPost.publishedDate || recentPost.createdAt).toLocaleDateString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {recentPost.readingTime || 5} min
+                      </span>
+                    </div>
+                  </div>
+                </article>
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 pb-4">
-        <div className="grid lg:grid-cols-12 gap-6">
-          {/* Article Content */}
-          <article className="lg:col-span-8">
-            {/* Content */}
-
- 
-          
-             <LexicalRenderer content={post.content} />
-           
-            {/* Article Actions */}
-            <div className="mt-12 p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Was this article helpful?
-                </div>
-                <div className="flex items-center gap-4">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-green-50 text-green-700 hover:bg-green-100 rounded-lg transition-all">
-                    <Heart className="w-4 h-4" />
-                    Like
-                  </button>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-all">
-                    <MessageCircle className="w-4 h-4" />
-                    Comment
-                  </button>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition-all">
-                    <Share2 className="w-4 h-4" />
-                    Share
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          {/* Sidebar */}
-          <aside className="lg:col-span-4">
-            <div className="sticky top-24 space-y-8">
-              {/* Newsletter Signup */}
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg">
-                <h3 className="text-xl font-bold mb-4">Stay Updated</h3>
-                <p className="text-blue-100 mb-6">
-                  Get the latest articles and insights delivered to your inbox.
-                </p>
-                <form className="space-y-4">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="w-full px-4 py-2 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-300 outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
-                  >
-                    Subscribe
-                  </button>
-                </form>
-              </div>
-            </div>
-          </aside>
+        {/* Navigation */}
+        <div className="mt-12 flex justify-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to All Posts
+          </Link>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white mt-20">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 text-xl font-bold mb-2">
+              <Sparkles className="w-5 h-5" />
+              TechBlog Pro
+            </div>
+            <p className="text-gray-400">
+              Built with ❤️ by JUBAIR AHMED 
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -1,36 +1,36 @@
- 
-import { headers as getHeaders } from 'next/headers.js'
+import { headers as getHeaders } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
-import { fileURLToPath } from 'url'
-import { Search, Calendar, User, Clock, ArrowRight, BookOpen, Sparkles, TrendingUp, Plus } from 'lucide-react'
+import { Calendar, User, Clock, ArrowRight, BookOpen, Sparkles, Plus } from 'lucide-react'
 
 import config from '@/payload.config'
- 
-// import './styles.css'
-import "./globals.css" 
+import "./globals.css"
 import BlogInteractions from '../components/BlogInteractions'
-import { getAllCategories, getBlogPosts } from '@/lib/blog-actions'
+import BlogSidebar from '../components/BlogSidebar'
+import { getAllCategories, getAllTags, getBlogPosts } from '@/lib/blog-actions'
 
-// Client component for interactive features
- 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: { category?: string; search?: string; page?: string }
-}) {
+interface SearchParams {
+  category?: string
+  tag?: string
+  search?: string
+  page?: string
+}
+
+interface HomePageProps {
+  searchParams: SearchParams
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
   const headers = await getHeaders()
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
   const { user } = await payload.auth({ headers })
-  
-  // Fetch blog data using Server Components
+ 
   const postsData = await getBlogPosts(searchParams)
   const categories = await getAllCategories()
-  
-  const fileURL = `vscode://file/${fileURLToPath(import.meta.url)}`
+  const tags = await getAllTags()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -47,7 +47,6 @@ export default async function HomePage({
             </div>
             
             <div className="flex items-center gap-6">
-            
               <Link
                 href="/about"
                 className="text-slate-500 hover:text-blue-600 font-medium transition-colors"
@@ -58,7 +57,7 @@ export default async function HomePage({
                 <div className="flex items-center gap-4">
                   <Link
                     href="/admin"
-                          target="_blank"
+                    target="_blank"
                     className="text-slate-800 hover:text-blue-600 font-medium transition-colors"
                   >
                     Dashboard
@@ -86,7 +85,6 @@ export default async function HomePage({
           <div className="text-center">
             {!user && <h1 className="text-5xl font-bold text-gray-900 mb-6">Welcome to TechBlog Pro.</h1>}
 
-    
             {user && (
               <h1 className="text-4xl font-bold text-gray-900 mb-6">
                 Welcome back, <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{user.email}</span>
@@ -104,86 +102,30 @@ export default async function HomePage({
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6">
-              {/* Quick Actions */}
-         
-              {/* Categories */}
-              {categories.length > 0 && (
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    Categories
-                  </h3>
-                  <div className="space-y-3">
-                    <Link
-                      href="/blog"
-                      className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 block ${
-                        !searchParams.category 
-                          ? 'bg-blue-100 text-blue-700 font-medium' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      All Posts
-                    </Link>
-                    {categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        href={`/blog?category=${category.slug}`}
-                        className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 ${
-                          searchParams.category === category.slug
-                            ? 'bg-blue-100 text-blue-700 font-medium'
-                            : 'hover:bg-gray-50'
-                        }`}
-                      >
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: category.color }}
-                        ></div>
-                        {category.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Stats */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Blog Stats
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Total Posts</span>
-                    <span className="font-bold text-blue-600">{postsData.totalDocs}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Categories</span>
-                    <span className="font-bold text-indigo-600">{categories.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Published</span>
-                    <span className="font-bold text-green-600">
-                      {postsData.docs.filter(post => post.status === 'published').length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
+          {/* Sidebar with Filtering */}
+          <BlogSidebar 
+            categories={categories}
+            tags={tags}
+            totalPosts={postsData.totalDocs}
+            publishedCount={postsData.docs.filter(post => post.status === 'published').length}
+          />
 
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Results Header */}
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {searchParams.category ? `${searchParams.category} Posts` : 'Latest Articles'}
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                  ({postsData.docs.length} articles)
-                </span>
-              </h2>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {searchParams.search ? `Search Results` :
+                   searchParams.category ? `${categories.find(cat => cat.slug === searchParams.category)?.name || searchParams.category} Posts` : 
+                   searchParams.tag ? `#${tags.find(tag => tag.slug === searchParams.tag)?.name || searchParams.tag} Posts` :
+                   'Latest Articles'}
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {postsData.docs.length} {postsData.docs.length === 1 ? 'article' : 'articles'} found
+                  {postsData.totalPages > 1 && ` • Page ${postsData.page} of ${postsData.totalPages}`}
+                </p>
+              </div>
             </div>
 
             {/* Posts Grid */}
@@ -235,8 +177,7 @@ export default async function HomePage({
                         </div>
                       </div>
                       
-                      <Link href={`/blog/${post.slug}`}>
-                      
+                      <Link href={`/blog/${post.id}`}>
                         <h3 className={`font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors cursor-pointer ${
                           index === 0 ? 'text-2xl' : 'text-xl'
                         }`}>
@@ -256,8 +197,6 @@ export default async function HomePage({
                         
                         <Link
                           href={`/blog/${post.id}`}
-
-
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 group"
                         >
                           Read More
@@ -271,7 +210,7 @@ export default async function HomePage({
                           {post.tags.map((tag, tagIndex) => (
                             <Link
                               key={tagIndex}
-                              href={`/blog?tag=${tag.slug}`}
+                              href={`/?tag=${tag.slug}`}
                               className="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
                             >
                               #{tag.name}
@@ -288,13 +227,14 @@ export default async function HomePage({
                 <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts found</h3>
                 <p className="text-gray-600 mb-6">
-                  {searchParams.category || searchParams.search 
+                  {searchParams.category || searchParams.search || searchParams.tag
                     ? 'Try adjusting your filters or search terms.' 
                     : 'Start by creating your first blog post!'}
                 </p>
                 {user && (
                   <Link
-                    href="/admin/posts/create"
+                    href="/admin/collections/posts/create"
+                    target="_blank"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
                   >
                     <Plus className="w-5 h-5" />
@@ -307,19 +247,49 @@ export default async function HomePage({
             {/* Pagination */}
             {postsData.totalPages > 1 && (
               <div className="flex justify-center gap-2 mt-8">
+                {postsData.hasPrevPage && (
+                  <Link
+                    href={`/?page=${postsData.page - 1}${
+                      searchParams.category ? `&category=${searchParams.category}` : ''
+                    }${searchParams.search ? `&search=${searchParams.search}` : ''}${
+                      searchParams.tag ? `&tag=${searchParams.tag}` : ''
+                    }`}
+                    className="px-4 py-2 bg-white text-slate-800 rounded-lg font-medium hover:bg-gray-100 transition-all border"
+                  >
+                    Previous
+                  </Link>
+                )}
+                
                 {Array.from({ length: postsData.totalPages }, (_, i) => i + 1).map((pageNum) => (
                   <Link
                     key={pageNum}
-                    href={`/?page=${pageNum}${searchParams.category ? `&category=${searchParams.category}` : ''}${searchParams.search ? `&search=${searchParams.search}` : ''}`}
+                    href={`/?page=${pageNum}${
+                      searchParams.category ? `&category=${searchParams.category}` : ''
+                    }${searchParams.search ? `&search=${searchParams.search}` : ''}${
+                      searchParams.tag ? `&tag=${searchParams.tag}` : ''
+                    }`}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       pageNum === (parseInt(searchParams.page || '1'))
                         ? 'bg-blue-600 text-white'
-                        : 'bg-white text-slate-800 hover:bg-gray-100'
+                        : 'bg-white text-slate-800 hover:bg-gray-100 border'
                     }`}
                   >
                     {pageNum}
                   </Link>
                 ))}
+                
+                {postsData.hasNextPage && (
+                  <Link
+                    href={`/?page=${postsData.page + 1}${
+                      searchParams.category ? `&category=${searchParams.category}` : ''
+                    }${searchParams.search ? `&search=${searchParams.search}` : ''}${
+                      searchParams.tag ? `&tag=${searchParams.tag}` : ''
+                    }`}
+                    className="px-4 py-2 bg-white text-slate-800 rounded-lg font-medium hover:bg-gray-100 transition-all border"
+                  >
+                    Next
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -335,9 +305,8 @@ export default async function HomePage({
               TechBlog Pro
             </div>
             <p className="text-gray-400 mb-6">
-              Build with ❤️ by JUBAIR AHMED 
+              Built with ❤️ by JUBAIR AHMED 
             </p>
-            
           </div>
         </div>
       </footer>
